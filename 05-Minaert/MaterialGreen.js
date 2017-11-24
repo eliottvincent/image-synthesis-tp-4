@@ -55,10 +55,9 @@ class MaterialGreen extends Material
                 // éclairement ambiant : 20 % 
                 gl_FragColor = vec4(Kd * 0.2, 1.0);
 
-                
                  // vecteur N et -V et Reflet de V
                 vec3 N = normalize(frgN);
-                vec3 V = normalize(frgPosition.xyz);
+                vec3 V = normalize(-frgPosition.xyz);
                 vec3 mV = -normalize(frgPosition.xyz);
                 vec3 Rv = reflect(mV, N);
 
