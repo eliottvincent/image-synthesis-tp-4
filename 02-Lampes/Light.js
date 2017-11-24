@@ -9,6 +9,7 @@ class Light
     {
         this.m_LightColor          = vec3.create();
         this.m_LightPositionScene  = vec4.create();
+        this.m_LightDirectionScene = vec4.create();
 
         // pour une lampe spot
         this.m_LightMinAngle = 20.0;
@@ -16,6 +17,7 @@ class Light
 
         // position de la lampe relativement à la caméra
         this.m_LightPositionCamera  = vec4.create();
+        this.m_LightDirectionCamera = vec4.create();
     }
 
 
@@ -57,20 +59,41 @@ class Light
         return this.m_LightPositionCamera;
     }
 
+    /**
+     * définit la direction de la lampe par rapport à la scène
+     */
+    setDirection(x,y,z,w)
+    {
+        vec4.set(this.m_LightDirectionScene, x, y, z, w);
+        return this;
+    }
 
     /**
-     * calcule la position en coordonnées caméra
+     * retourne la direction de la lampe par rapport à la caméra
+     * @return vec4 direction caméra
+     */
+    getDirection()
+    {
+        return this.m_LightDirectionCamera;
+    }
+
+    /**
+     * calcule la position et la direction en coordonnées caméra
      * @param matV : mat4 matrice de vue caméra
      */
     transform(matV)
     {
         vec4.transformMat4(this.m_LightPositionCamera,  this.m_LightPositionScene,  matV);
+        vec4.transformMat4(this.m_LightDirectionCamera, this.m_LightDirectionScene,  matV);
+        vec4.normalize(this.m_LightDirectionCamera,  this.m_LightDirectionCamera);
     }
 
 
     /**
-     * définit la couleur de la lampe, c'est à dire l'intensité
-     * @param color : vec3 donnant la couleur
+     * définit les angles de fermeture de la lampe spot
+     * @param minangle eclairement total
+     * @param maxangle obscurité
+     * @return {Light}
      */
     setAngles(minangle, maxangle)
     {

@@ -19,15 +19,18 @@ class Scene
 
         // caractéristiques de la lampe
         this.m_Light = new Light();
-        this.m_Light.setColor(1.0, 1.0, 1.0);
-        this.m_Light.setPosition(-3.0, 3.0, 1.0, 0.0);      // directionnelle
-        //this.m_Light.setPosition(-3.0,  3.0,  1.0, 1.0);    // positionnelle
+        this.m_Light.setColor(150.0, 150.0, 150.0);
+        //this.m_Light.setPosition(-3.0, 3.0, 1.0, 0.0);      // directionnelle
+        this.m_Light.setPosition(-3.0,  3.0,  1.0, 1.0);    // positionnelle
+        this.m_Light.setDirection(1.5, -2.0, -0.5, 0.0);
+        this.m_Light.setAngles(30.0, 38.0);
 
         // couleur du fond : gris très sombre
-        gl.clearColor(0.2, 0.2, 0.2, 1.0);
+        gl.clearColor(0.05, 0.05, 0.05, 1.0);
 
         // activer le depth buffer
         gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.CULL_FACE);
 
         // gestion souris
         this.m_Azimut    = -30.0;
@@ -145,7 +148,7 @@ class Scene
         this.m_Apple.setLight(this.m_Light);
 
         // dessiner une étoile là où est la lampe si elle est positionnelle
-        if (this.m_Light.m_LightPositionScene[3] == 1.0) {
+        if (this.m_Light.m_LightPositionScene[3] === 1.0) {
             mat4.translate(this.m_MatVM, this.m_MatV, this.m_Light.m_LightPositionScene);
             this.m_Star.onDraw(this.m_MatP, this.m_MatVM);
         }

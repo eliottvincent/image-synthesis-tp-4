@@ -13,7 +13,7 @@ class Plane extends Mesh
     constructor(size=5)
     {
         // matériau
-        let material = new MaterialColor(0.7, 0.6, 0.5);
+        let material = new MaterialColor(0.07, 0.06, 0.05);
 
         // initialisation de this
         super("Plane", material);
@@ -27,6 +27,15 @@ class Plane extends Mesh
 
         // rectangle
         this.addQuad(P1, P2, P3, P4);
+
+        // sommets
+        let P1b = new Vertex(this, -size, 0, +size);
+        let P2b = new Vertex(this, +size, 0, +size);
+        let P3b = new Vertex(this, +size, 0, -size);
+        let P4b = new Vertex(this, -size, 0, -size);
+
+        // rectangle
+        this.addQuad(P4b, P3b, P2b, P1b);
 
         this.computeNormals();
         this.setReady();

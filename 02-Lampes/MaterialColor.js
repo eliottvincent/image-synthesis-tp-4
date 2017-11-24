@@ -38,10 +38,11 @@ class MaterialColor extends Material
             precision mediump float;
             // couleur du matériau, fixée lors de la construction du matériau
             const vec3 Kd = vec3(${r}, ${g}, ${b});
+            const vec3 Ks = vec3(0.05, 0.05, 0.05);
 
             // paramètres du shader : caractéristiques de la lampe
             uniform vec3 LightColor;        // couleur de la lampe
-            uniform vec4 LightPosition;     // position ou direction d'une lampe positionnelle ou directionnelle
+            uniform vec4 LightPosition;     // position ou direction en coord caméra d'une lampe positionnelle ou directionnelle
             uniform vec4 LightDirection;    // direction du cône pour une lampe spot
             uniform float cosmaxangle;
             uniform float cosminangle;
@@ -55,18 +56,33 @@ class MaterialColor extends Material
 
             void main()
             {
-                // éclairement ambiant : 20%
-                gl_FragColor = vec4(Kd * 0.2, 1.0);
-
-                // vecteur normal normalisé
+                // prépa des vecteurs
+                vec3 V = normalize(-frgPosition.xyz);
                 vec3 N = normalize(frgN);
+                vec3 L = LightPosition.xyz - frgPosition.xyz*LightPosition.w;
+                
+                // moduler l'intensité de la lampe selon la distance
+                float dist = length(L);
+                L = L / dist;   // normalisation de L
+                
+                // est-ce que l'on est dans le cône de la lampe spot?
+				float k = smoothstep(cosmaxangle, cosminangle, dot(-L, LightDirection.xyz));    // = 1 si on est dans le cone
+				vec3 LightColorEffective =  LightColor / (dist*dist) * k;
 
-                // direction de la lumière dans le repère caméra
-                vec3 L = normalize(LightPosition.xyz);
+                // calcul de Lambert
+                float D = clamp(dot(N, L), 0.0, 1.0);
 
-                // éclairement diffus de Lambert
-                float dotNL = clamp(dot(N, L), 0.0, 1.0);
-                glFragColor += vec4(Kd * LightColor * dotNL, 0.0);
+                // calcul de Blinn
+                vec3 H = normalize(V + L);
+                float dotNH = clamp(dot(N, H), 0.0, 1.0);
+                float S = pow(dotNH, 100.0);
+
+                // couleur finale = diffus + ambiant
+                vec3 amb = 0.1 * Kd; //contribution ambiante
+                vec3 dif = LightColorEffective * Kd * D; //contribution diffuse
+                vec3 spec = LightColorEffective * Ks * S;
+
+                glFragColor = vec4(amb + dif + spec, 1.0);
             }`;
 
         // compile le shader, recherche les emplacements des uniform et attribute communs
@@ -75,6 +91,9 @@ class MaterialColor extends Material
         // emplacement des variables uniform spécifiques
         this.m_LightColorLoc     = gl.getUniformLocation(this.m_ShaderId, "LightColor");
         this.m_LightPositionLoc  = gl.getUniformLocation(this.m_ShaderId, "LightPosition");
+        this.m_LightDirectionLoc  = gl.getUniformLocation(this.m_ShaderId, "LightDirection");
+        this.m_CosMinAngleLoc  = gl.getUniformLocation(this.m_ShaderId, "cosminangle");
+        this.m_CosMaxAngleLoc  = gl.getUniformLocation(this.m_ShaderId, "cosmaxangle");
     }
 
 
@@ -90,5 +109,9 @@ class MaterialColor extends Material
         // fournir la position
         vec3.glUniform(this.m_LightColorLoc,     light.getColor());
         vec4.glUniform(this.m_LightPositionLoc,  light.getPosition());
+        vec4.glUniform(this.m_LightDirectionLoc,  light.getDirection());
+
+        gl.uniform1f(this.m_CosMinAngleLoc,  light.getCosMinAngle());
+        gl.uniform1f(this.m_CosMaxAngleLoc,  light.getCosMaxAngle());
     }
 }

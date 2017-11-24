@@ -10,7 +10,7 @@ class Apple extends Mesh
     constructor()
     {
         // matériau
-        let material = new MaterialColor(0.0, 0.8, 0.2);
+        let material = new MaterialColor(0.0, 0.08, 0.02);
 
         // initialisation de this
         super("Apple", material);
