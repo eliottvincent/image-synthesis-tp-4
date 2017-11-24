@@ -57,7 +57,7 @@ class MaterialGreen extends Material
 
                 // vecteur N et -V et Reflet de V
                 vec3 N = normalize(frgN);
-                vec3 V = normalize(frgPosition.xyz);
+                vec3 V = normalize(-frgPosition.xyz);
                 vec3 mV = -normalize(frgPosition.xyz);
                 vec3 Rv = reflect(mV, N);
                 
@@ -92,9 +92,10 @@ class MaterialGreen extends Material
                     // ajout de la composante diffuse (Oren-Nayar)
                     gl_FragColor += vec4(Kd * D * LightColorEffective, 1.0);
                     
-                    // Blinn-Oren-Nayar
-                    float dotRvL = clamp(dot(Rv,L), 0.0, 1.0);
-                    float S = pow(dotRvL, ns);
+                    // Blinn-Oren Nayar
+                    vec3 H = normalize(V + L);
+                    float dotNH = clamp(dot(N,H), 0.0, 1.0);
+                    float S = pow(dotNH, ns);
                     
                     // ajout de la composante speculaire (Oren-Nayar)
                     gl_FragColor += vec4(S * Ks * LightColorEffective, 1.0);

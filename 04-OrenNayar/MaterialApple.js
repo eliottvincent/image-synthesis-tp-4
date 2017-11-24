@@ -62,7 +62,7 @@ class MaterialApple extends Material
 
                 // vecteur N et -V et Reflet de V
                 vec3 N = normalize(frgN);
-                vec3 V = normalize(frgPosition.xyz);
+                vec3 V = normalize(-frgPosition.xyz);
                 vec3 mV = -normalize(frgPosition.xyz);
                 vec3 Rv = reflect(mV, N);
                 
@@ -98,7 +98,7 @@ class MaterialApple extends Material
                     gl_FragColor += vec4(Kd * D * LightColorEffective, 1.0);
 
                     // Blinn-Oren Nayar
-                    vec3 H = normalize(L + V);
+                    vec3 H = normalize(V + L);
                     float dotNH = clamp(dot(N,H), 0.0, 1.0);
                     float S = pow(dotNH, ns);
                     

@@ -23,8 +23,8 @@ class Scene
 
         // position/direction des lampes en coordonnées scène
         this.m_Lights = [
-            new Light().setPosition(-1.0,  0.7,  0.5,  0.0).setColor(1.5, 1.5, 1.5),
-            new Light().setPosition( 0.5,  1.0,  1.0,  0.0).setColor(0.5, 0.5, 0.5),
+            new Light().setPosition(-1.0,  0.7,  0.5,  0.0).setColor(1.0, 1.0, 1.0),
+            new Light().setPosition( 0.5,  1.0,  1.0,  0.0).setColor(2.5, 2.5, 2.5),
             new Light().setPosition( 0.5,  0.5, -1.0,  0.0).setColor(0.6, 0.6, 0.6)
         ];
 
