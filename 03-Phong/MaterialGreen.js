@@ -8,7 +8,7 @@ class MaterialGreen extends Material
     constructor()
     {
         let srcVertexShader = dedent
-            `#version 300 es
+            `#version 100
 
             // matrices de transformation
             uniform mat4 matP;
@@ -16,13 +16,13 @@ class MaterialGreen extends Material
             uniform mat3 matN;
 
             // VBO fournissant les infos des sommets
-            in vec3 glVertex;
-            in vec3 glNormal;
-            in vec2 glTexCoords;
+            attribute vec3 glVertex;
+            attribute vec3 glNormal;
+            attribute vec2 glTexCoords;
 
             // données pour le fragment shader
-            out vec4 frgPosition;
-            out vec3 frgN;
+            varying vec4 frgPosition;
+            varying vec3 frgN;
 
             void main()
             {
@@ -32,7 +32,7 @@ class MaterialGreen extends Material
             }`;
 
         let srcFragmentShader = dedent
-            `#version 300 es
+            `#version 100
             precision mediump float;
 
             // caractéristiques du matériau
@@ -46,19 +46,64 @@ class MaterialGreen extends Material
             uniform vec4 LightPositions[nbL];
 
             // données venant du vertex shader
-            in vec4 frgPosition;
-            in vec3 frgN;
-            in vec2 frgTexCoords;
-
-            // sortie du shader
-            out vec4 glFragColor;
+            varying vec4 frgPosition;
+            varying vec3 frgN;
+            varying vec2 frgTexCoords;
 
             void main()
             {
-                // éclairement ambiant : 20%
-                glFragColor = vec4(Kd * 0.2, 1.0);
+                // éclairement ambiant : 20 % 
+                gl_FragColor = vec4(Kd * 0.2, 1.0);
 
-                /// TODO calculer Lambert + Phong avec chaque lampe
+                // vecteur N et -V et Reflet de V
+                vec3 N = normalize(frgN);
+                vec3 V = normalize(-frgPosition.xyz);
+                vec3 mV = normalize(frgPosition.xyz);
+                vec3 Rv = reflect(mV, N);
+
+                // déclaration pour Minaert
+                float dotNV = clamp(dot(N,V), 0.0, 1.0);
+                
+                // déclaration pour Oren-Nayar
+                const float sigma2 = 0.64;
+                const float a = 1.0 - 0.5 * sigma2 / (sigma2 + 0.57);
+                const float b = 0.45 * sigma2/(sigma2 + 0.09);
+                float angleNV = acos(dotNV);
+                vec3 Vtb = normalize(V - N*dotNV);
+                const float m = 5.0;
+                
+                for (int i = 0; i < nbL; i++)
+                {
+                    vec3 L = LightPositions[i].xyz - frgPosition.xyz * LightPositions[i].w;
+                    float dist = length(L);
+                    L = L / dist;   // normalisation de L
+                    vec3 LightColorEffective =  LightColors[i] / (dist*dist);
+                    
+                    // déclaration pour Lambert
+                    float dotNL = clamp(dot(N, L), 0.0, 1.0);
+                    
+                    // Oren-Nayar
+                    float angleNL = acos(dotNL);
+                    vec3 Ltb = normalize(L - N*dotNL);
+                    float alpha = max(angleNV, angleNL);
+                    float beta  = min(angleNV, angleNL);
+                    float c = sin(alpha) * tan(beta);
+                    float gamma = max(0.0, dot(Vtb, Ltb));
+
+                    // Phong 
+                    float dotRvL = clamp(dot(Rv,L), 0.0,1.0);
+                    float S = pow(dotRvL, ns);
+
+                    // ajout de la composante diffuse (Lambert) 
+                    float D = clamp(dot(N,L), 0.0, 1.0);
+                    
+                    // Lambert
+                    gl_FragColor += vec4(Kd * D * LightColorEffective, 1.0);
+
+                    // Blinn-Phong
+                    gl_FragColor += vec4(S * Ks * LightColorEffective, 1.0);
+                }
+                
             }`;
 
         // compile le shader, recherche les emplacements des uniform et attribute communs
